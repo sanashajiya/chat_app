@@ -1,10 +1,12 @@
 import 'dart:io';
-
+import 'package:flutter/material.dart';
 import 'package:chat_app/widgets/user_image_picker.dart';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
+
 
 final _firebase = FirebaseAuth.instance;
 
@@ -27,10 +29,6 @@ class _AuthScreenState extends State<AuthScreen> {
   void _submit() async {
     final isvalid = _formkey.currentState!.validate();
     if (!isvalid || !_isLogin && _selectedImage == null) {
-      // ScaffoldMessenger.of(context).clearSnackBars();
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   const SnackBar(content: Text('Please enter a valid image.')),
-      // );
       return;
     }
 
