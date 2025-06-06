@@ -1,4 +1,6 @@
+import 'package:chat_app/widgets/message_bubble.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class ChatMessages extends StatelessWidget {
@@ -6,11 +8,12 @@ class ChatMessages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authenticatedUser = FirebaseAuth.instance.currentUser!;
     return StreamBuilder(
       stream:
           FirebaseFirestore.instance
               .collection('chat')
-              .orderBy('createdAt', descending: false)
+              .orderBy('createdAt', descending: true)
               .snapshots(),
       builder: (ctx, chatSnapshots) {
         if (chatSnapshots.connectionState == ConnectionState.waiting) {
@@ -22,13 +25,38 @@ class ChatMessages extends StatelessWidget {
         if (chatSnapshots.hasError) {
           return const Center(child: Text('Something went wrong...'));
         }
-        final loadmessages = chatSnapshots.data!.docs;
+        final loadedmessages = chatSnapshots.data!.docs;
 
         return ListView.builder(
-          itemCount: loadmessages.length,
-          itemBuilder: (ctx, index) => Text(
-            loadmessages[index].data()['text']
-          ),
+          padding: const EdgeInsets.only(bottom: 40, left: 13, right: 13),
+          itemCount: loadedmessages.length,
+          reverse: true,
+          itemBuilder: (ctx, index) {
+            final ChatMessage = loadedmessages[index].data();
+            final nextChatMessage =
+                index + 1 < loadedmessages.length
+                    ? loadedmessages[index + 1].data()
+                    : null;
+
+            final currentMessageUserId = ChatMessage['userId'];
+            final nextMessageUserId =
+                nextChatMessage != null ? nextChatMessage['userId'] : null;
+            final nextUserIsSame = nextMessageUserId == currentMessageUserId;
+            
+            if(nextUserIsSame) {
+              return MessageBubble.next(
+                message: ChatMessage['text'],
+                isMe: authenticatedUser.uid == currentMessageUserId,
+              );
+            } else {
+              return MessageBubble.first(
+                username: ChatMessage['username'],
+                userImage: ChatMessage['userImage'],
+                message: ChatMessage['text'],
+                isMe: authenticatedUser.uid == currentMessageUserId,
+              );
+            }
+          },
         );
       },
     );
